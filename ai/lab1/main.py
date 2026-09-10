@@ -17,7 +17,7 @@ MODEL_PATH = Path(__file__).parent / "lenet_mnist.keras"
 
 
 def build_model():
-    """Вариант LeNet-5: свёртки → pooling → полносвязные слои."""
+    """Вариант LeNet-5: свёртки -> pooling -> полносвязные слои."""
     return tf.keras.Sequential([
         tf.keras.Input(shape=(28, 28, 1)),
         tf.keras.layers.Conv2D(6, (5, 5), padding="same", activation="relu"),
@@ -35,7 +35,7 @@ def train(epochs):
     tf.keras.utils.set_random_seed(42)
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
-    # (N, 28, 28) → (N, 28, 28, 1). Значения 0..255 → 0..1.
+    # (N, 28, 28) -> (N, 28, 28, 1). Значения 0..255 -> 0..1.
     x_train = x_train.astype("float32")[..., np.newaxis] / 255.0
     x_test = x_test.astype("float32")[..., np.newaxis] / 255.0
 
