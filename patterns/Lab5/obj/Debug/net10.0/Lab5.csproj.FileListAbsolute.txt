@@ -1,0 +1,15 @@
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.GeneratedMSBuildEditorConfig.editorconfig
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.AssemblyInfoInputs.cache
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.AssemblyInfo.cs
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.csproj.CoreCompileInputs.cache
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.sourcelink.json
+/home/vadim/7sem/patterns/Lab5/bin/Debug/net10.0/Lab5
+/home/vadim/7sem/patterns/Lab5/bin/Debug/net10.0/Lab5.deps.json
+/home/vadim/7sem/patterns/Lab5/bin/Debug/net10.0/Lab5.runtimeconfig.json
+/home/vadim/7sem/patterns/Lab5/bin/Debug/net10.0/Lab5.dll
+/home/vadim/7sem/patterns/Lab5/bin/Debug/net10.0/Lab5.pdb
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.dll
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/refint/Lab5.dll
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.pdb
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/Lab5.genruntimeconfig.cache
+/home/vadim/7sem/patterns/Lab5/obj/Debug/net10.0/ref/Lab5.dll

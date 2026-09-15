@@ -1,0 +1,15 @@
+/home/vadim/7sem/patterns/Lab11/bin/Debug/net10.0/Lab11
+/home/vadim/7sem/patterns/Lab11/bin/Debug/net10.0/Lab11.deps.json
+/home/vadim/7sem/patterns/Lab11/bin/Debug/net10.0/Lab11.runtimeconfig.json
+/home/vadim/7sem/patterns/Lab11/bin/Debug/net10.0/Lab11.dll
+/home/vadim/7sem/patterns/Lab11/bin/Debug/net10.0/Lab11.pdb
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.GeneratedMSBuildEditorConfig.editorconfig
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.AssemblyInfoInputs.cache
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.AssemblyInfo.cs
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.csproj.CoreCompileInputs.cache
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.sourcelink.json
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.dll
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/refint/Lab11.dll
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.pdb
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/Lab11.genruntimeconfig.cache
+/home/vadim/7sem/patterns/Lab11/obj/Debug/net10.0/ref/Lab11.dll

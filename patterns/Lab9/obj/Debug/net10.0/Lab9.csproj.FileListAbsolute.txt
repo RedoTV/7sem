@@ -1,0 +1,15 @@
+/home/vadim/7sem/patterns/Lab9/bin/Debug/net10.0/Lab9
+/home/vadim/7sem/patterns/Lab9/bin/Debug/net10.0/Lab9.deps.json
+/home/vadim/7sem/patterns/Lab9/bin/Debug/net10.0/Lab9.runtimeconfig.json
+/home/vadim/7sem/patterns/Lab9/bin/Debug/net10.0/Lab9.dll
+/home/vadim/7sem/patterns/Lab9/bin/Debug/net10.0/Lab9.pdb
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.GeneratedMSBuildEditorConfig.editorconfig
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.AssemblyInfoInputs.cache
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.AssemblyInfo.cs
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.csproj.CoreCompileInputs.cache
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.sourcelink.json
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.dll
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/refint/Lab9.dll
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.pdb
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/Lab9.genruntimeconfig.cache
+/home/vadim/7sem/patterns/Lab9/obj/Debug/net10.0/ref/Lab9.dll
