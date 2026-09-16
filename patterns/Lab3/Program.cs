@@ -1,64 +1,69 @@
-using Lab3;
+// Lab3: Builder — собираем сложный объект по частям,
+// вместо конструктора с кучей параметров
 
-Console.WriteLine("=== 1. Ручная сборка: код-ревьюер ===");
-var reviewer = new AiAgent.Builder("gpt-4o")
-    .WithSystemPrompt("Ты строгий ревьюер C#-кода. Указывай на утечки, NRE и нарушения SOLID.")
-    .WithTemperature(0.2)
-    .WithMaxOutputTokens(1024)
-    .WithTool("read_file")
-    .WithTool("search_code")
-    .WithMemory(MemoryKind.BufferWindow, windowSize: 20)
-    .WithRetries(3)
-    .WithDailyBudget(2.50m)
+Agent agent = new Agent.Builder()
+    .SetModel("gpt-4o")
+    .SetSystemPrompt("Ты полезный ассистент")
+    .SetTemperature(0.5)
+    .SetMaxTokens(1024)
     .Build();
 
-reviewer.Describe();
-reviewer.SimulateRequest("Проверь PR #42, там рефакторинг репозитория");
+agent.Print();
 
-Console.WriteLine("\n=== 2. Сборка через заготовки (Director) ===");
+// не все шаги обязательны — берутся значения по умолчанию
+Agent simple = new Agent.Builder()
+    .SetModel("gpt-4o-mini")
+    .Build();
 
-var cheap = AgentPresets.CheapSummarizer();
-Console.WriteLine("Пресет CheapSummarizer:");
-cheap.Describe();
+Console.WriteLine();
+simple.Print();
 
-var creative = AgentPresets.Storyteller();
-Console.WriteLine("\nПресет Storyteller:");
-creative.Describe();
-creative.SimulateRequest("Придумай сказку про лямбда-выражения");
-
-Console.WriteLine("\n=== 3. Валидация в Build() ===");
-try
+public class Agent
 {
-    _ = new AiAgent.Builder("gpt-4o")
-        .WithTemperature(4.2)
-        .Build();
-}
-catch (InvalidOperationException ex)
-{
-    Console.WriteLine($"Отказано в сборке: {ex.Message}");
-}
+    public string Model;
+    public string SystemPrompt;
+    public double Temperature;
+    public int MaxTokens;
+    public bool Streaming;
 
-// Director: готовые рецепты сборки через тот же билдер
-public static class AgentPresets
-{
-    public static AiAgent CheapSummarizer() =>
-        new AiAgent.Builder("gpt-4o-mini")
-            .WithSystemPrompt("Сжимай текст до выжимки в 5 пунктов, без воды.")
-            .WithTemperature(0.1)
-            .WithMaxOutputTokens(256)
-            .WithMemory(MemoryKind.Summarizing)
-            .WithDailyBudget(0.50m)
-            .Build();
+    public Agent(string model, string systemPrompt, double temperature, int maxTokens, bool streaming)
+    {
+        Model = model;
+        SystemPrompt = systemPrompt;
+        Temperature = temperature;
+        MaxTokens = maxTokens;
+        Streaming = streaming;
+    }
 
-    public static AiAgent Storyteller() =>
-        new AiAgent.Builder("gpt-4o")
-            .WithSystemPrompt("Ты писатель-фантаст. Пиши образно, с интригой в первой фразе.")
-            .WithTemperature(1.4)
-            .WithMaxOutputTokens(2048)
-            .WithTool("image_gen")
-            .WithMemory(MemoryKind.BufferWindow, 50)
-            .WithRetries(1)
-            .WithDailyBudget(10.00m)
-            .WithStreaming()
-            .Build();
+    public void Print()
+    {
+        Console.WriteLine("Модель:      " + Model);
+        Console.WriteLine("Промпт:      " + SystemPrompt);
+        Console.WriteLine("Temperature: " + Temperature);
+        Console.WriteLine("MaxTokens:   " + MaxTokens);
+        Console.WriteLine("Стриминг:    " + (Streaming ? "да" : "нет"));
+    }
+
+    public class Builder
+    {
+        private string model;
+        private string systemPrompt = "Ты полезный ассистент";
+        private double temperature = 0.7;
+        private int maxTokens = 512;
+        private bool streaming;
+
+        public Builder SetModel(string m) { model = m; return this; }
+        public Builder SetSystemPrompt(string p) { systemPrompt = p; return this; }
+        public Builder SetTemperature(double t) { temperature = t; return this; }
+        public Builder SetMaxTokens(int tokens) { maxTokens = tokens; return this; }
+        public Builder SetStreaming() { streaming = true; return this; }
+
+        public Agent Build()
+        {
+            if (model == null)
+                throw new Exception("Модель не задана");
+
+            return new Agent(model, systemPrompt, temperature, maxTokens, streaming);
+        }
+    }
 }

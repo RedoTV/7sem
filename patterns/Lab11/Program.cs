@@ -1,48 +1,103 @@
-using Lab11;
+// Lab11: Visitor — добавляем новые операции к набору классов, не меняя сами классы
 
-List<IChatElement> chat =
-[
-    new UserMessage("Найди в коде все вызовы client.PostAsync и посчитай их"),
-    new AssistantMessage("gpt-4o", "Сейчас посмотрю через поиск по коду.", 180, 24),
-    new ToolCall("search_code", "{\"pattern\": \"client.PostAsync\"}", "найдено 7 совпадений в 3 файлах", 450),
-    new AssistantMessage("gpt-4o", "Вызовов PostAsync: 7. Из них 5 без таймаута — риск зависания.", 620, 95),
-    new ImageAttachment("architecture.png", 1920, 1080, 1440),
-    new UserMessage("А теперь объясни, что происходит на диаграмме"),
-    new AssistantMessage("gpt-4o", "Диаграмма показывает поток авторизации через OAuth2…", 2100, 380),
-];
+List<IChatElement> chat = new List<IChatElement>();
+chat.Add(new UserMessage("Привет, найди все вызовы PostAsync"));
+chat.Add(new AssistantMessage("Ищу...", 100, 20));
+chat.Add(new AssistantMessage("Нашёл 7 вызовов", 500, 80));
 
-Console.WriteLine("=== Визитор 1: расшифровка диалога ===");
-var renderer = new TranscriptRendererVisitor();
+Console.WriteLine("--- Расшифровка диалога ---");
+VisitorPrint printer = new VisitorPrint();
 foreach (IChatElement element in chat)
-    element.Accept(renderer);
-
-Console.WriteLine("\n=== Визитор 2: стоимость по тарифам ===");
-var cost = new TokenCostVisitor();
-foreach (IChatElement element in chat)
-    element.Accept(cost);
-cost.PrintReport();
-
-Console.WriteLine("\n=== Визитор 3: экспорт в JSON (иерархию не меняли) ===");
-var json = new JsonExportVisitor();
-foreach (IChatElement element in chat)
-    element.Accept(json);
-Console.WriteLine(json.ToJson());
-
-// третий визитор — добавлен без правки классов элементов
-public sealed class JsonExportVisitor : IChatElementVisitor
 {
-    private readonly List<string> _lines = [];
+    element.Accept(printer);
+}
 
-    public void Visit(UserMessage e) => Add("user", e.Text, e.Text.Length / 2);
+Console.WriteLine();
+Console.WriteLine("--- Подсчёт стоимости ---");
+VisitorCost counter = new VisitorCost();
+foreach (IChatElement element in chat)
+{
+    element.Accept(counter);
+}
+counter.PrintTotal();
 
-    public void Visit(AssistantMessage e) => Add(e.Model, e.Text, e.InputTokens + e.OutputTokens);
+public interface IChatElement
+{
+    void Accept(IChatElementVisitor visitor);
+}
 
-    public void Visit(ToolCall e) => Add("tool", $"{e.ToolName}({e.Arguments})", e.Tokens);
+public class UserMessage : IChatElement
+{
+    public string Text;
 
-    public void Visit(ImageAttachment e) => Add("image", e.FileName, e.Tokens);
+    public UserMessage(string text)
+    {
+        Text = text;
+    }
 
-    private void Add(string role, string content, int tokens) =>
-        _lines.Add($"    {{ \"role\": \"{role}\", \"tokens\": {tokens}, \"content\": \"{content}\" }}");
+    public void Accept(IChatElementVisitor visitor)
+    {
+        visitor.VisitUser(this);
+    }
+}
 
-    public string ToJson() => "[\n" + string.Join(",\n", _lines) + "\n]";
+public class AssistantMessage : IChatElement
+{
+    public string Text;
+    public int InputTokens;
+    public int OutputTokens;
+
+    public AssistantMessage(string text, int inputTokens, int outputTokens)
+    {
+        Text = text;
+        InputTokens = inputTokens;
+        OutputTokens = outputTokens;
+    }
+
+    public void Accept(IChatElementVisitor visitor)
+    {
+        visitor.VisitAssistant(this);
+    }
+}
+
+public interface IChatElementVisitor
+{
+    void VisitUser(UserMessage m);
+    void VisitAssistant(AssistantMessage m);
+}
+
+// операция 1: печать диалога
+public class VisitorPrint : IChatElementVisitor
+{
+    public void VisitUser(UserMessage m)
+    {
+        Console.WriteLine("[Пользователь] " + m.Text);
+    }
+
+    public void VisitAssistant(AssistantMessage m)
+    {
+        Console.WriteLine("[Ассистент] " + m.Text);
+    }
+}
+
+// операция 2: подсчёт стоимости
+public class VisitorCost : IChatElementVisitor
+{
+    private int totalTokens = 0;
+
+    public void VisitUser(UserMessage m)
+    {
+        totalTokens = totalTokens + m.Text.Length / 2;
+    }
+
+    public void VisitAssistant(AssistantMessage m)
+    {
+        totalTokens = totalTokens + m.InputTokens + m.OutputTokens;
+    }
+
+    public void PrintTotal()
+    {
+        Console.WriteLine("Всего токенов: " + totalTokens);
+        Console.WriteLine("Стоимость: $" + totalTokens * 0.00001);
+    }
 }

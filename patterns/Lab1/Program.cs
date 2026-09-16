@@ -1,42 +1,63 @@
-using Lab1;
+// Lab1: Factory — фабрика создаёт объекты, клиент работает только с интерфейсом
 
-ChatModelFactory.Register("offline", () => new MockEchoModel());
+// клиент не пишет new сам, а просит фабрику
+IChatModel model = ChatModelFactory.Create("cloud");
 
-string provider = args.Length > 0 ? args[0] : "cloud";
-Console.WriteLine($"Провайдер из конфигурации: {provider}\n");
+string[] questions = { "Как хранить пароли?", "Что такое TCP?" };
 
-var session = new ChatSession(ChatModelFactory.Create(provider));
-session.RunDemo();
-
-Console.WriteLine("\n--------- тот же код клиента, но с локальной моделью ---------");
-new ChatSession(ChatModelFactory.Create("local")).RunDemo();
-
-public class ChatSession(IChatModel model)
+foreach (string q in questions)
 {
-    private readonly IChatModel _model = model;
+    Console.WriteLine("Вопрос: " + q);
+    Console.WriteLine("Ответ:  " + model.Answer(q));
+    Console.WriteLine();
+}
 
-    private static readonly string[] Questions =
-    [
-        "Как хранить пароли пользователей?",
-        "Почему git merge конфликтует?",
-        "Объясни разницу между TCP и UDP"
-    ];
+// тот же код клиента, другая модель
+IChatModel local = ChatModelFactory.Create("local");
+Console.WriteLine("Ответ локальной модели: " + local.Answer(questions[0]));
 
-    public void RunDemo()
+// третий вариант фабрики — заглушка для тестов
+IChatModel mock = ChatModelFactory.Create("mock");
+Console.WriteLine("Ответ заглушки: " + mock.Answer(questions[0]));
+
+public interface IChatModel
+{
+    string Answer(string question);
+}
+
+public class CloudModel : IChatModel
+{
+    public string Answer(string question)
     {
-        decimal spent = 0m;
+        Thread.Sleep(500); // имитация запроса в облако
+        return "Облако отвечает развёрнуто на вопрос: " + question;
+    }
+}
 
-        foreach (string question in Questions)
-        {
-            ChatReply reply = _model.Complete(new ChatRequest(question));
-            spent += reply.CostUsd;
+public class LocalModel : IChatModel
+{
+    public string Answer(string question)
+    {
+        Thread.Sleep(200); // имитация инференса на своей видеокарте
+        return "Локальная модель отвечает коротко: " + question;
+    }
+}
 
-            Console.WriteLine($"[Вопрос ] {question}");
-            Console.WriteLine($"[Модель ] {_model.Name}");
-            Console.WriteLine($"[Ответ  ] {reply.Text}");
-            Console.WriteLine($"[Токены ] {reply.TokensUsed}, стоимость: ${reply.CostUsd:0.000000}\n");
-        }
+public class MockModel : IChatModel
+{
+    public string Answer(string question)
+    {
+        return "[заглушка] " + question;
+    }
+}
 
-        Console.WriteLine($"Итого за сессию: ${spent:0.000000}");
+public static class ChatModelFactory
+{
+    public static IChatModel Create(string type)
+    {
+        if (type == "cloud") return new CloudModel();
+        if (type == "local") return new LocalModel();
+        if (type == "mock") return new MockModel();
+        throw new Exception("Неизвестный тип модели: " + type);
     }
 }
