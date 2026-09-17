@@ -1,5 +1,4 @@
 // Lab7: Observer — издатель (обучение нейросети) оповещает подписчиков о событиях
-// Компиляция: g++ -std=c++17 -o lab7 main.cpp && ./lab7
 
 #include <iostream>
 #include <vector>

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "eM64lLuPu8A=",
+  "success": true,
+  "projectFilePath": "/home/vadim/7sem/patterns/Lab4/Lab4.csproj",
+  "expectedPackageFiles": [
+    "/home/vadim/.nuget/packages/microsoft.aspnetcore.app.ref/10.0.11/microsoft.aspnetcore.app.ref.10.0.11.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -2,7 +2,7 @@
 // вместо конструктора с кучей параметров
 
 Agent agent = new Agent.Builder()
-    .SetModel("gpt-4o")
+    .SetModel("gpt-5.6 Sol")
     .SetSystemPrompt("Ты полезный ассистент")
     .SetTemperature(0.5)
     .SetMaxTokens(1024)
@@ -12,7 +12,7 @@ agent.Print();
 
 // не все шаги обязательны — берутся значения по умолчанию
 Agent simple = new Agent.Builder()
-    .SetModel("gpt-4o-mini")
+    .SetModel("gpt-5.6 Terra")
     .Build();
 
 Console.WriteLine();
