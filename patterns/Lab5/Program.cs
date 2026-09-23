@@ -14,14 +14,14 @@ ILlmService guarded = new ProtectionProxy(remote, validKey: "secret-123");
 
 try
 {
-    guarded.Complete(new LlmRequest("gpt-4o", "привет", ApiKey: "wrong-key"));
+    guarded.Complete(new LlmRequest("gpt-6-sol", "привет", ApiKey: "wrong-key"));
 }
 catch (UnauthorizedAccessException ex)
 {
     Console.WriteLine("Отказано: " + ex.Message);
 }
 
-LlmResponse allowed = guarded.Complete(new LlmRequest("gpt-4o", "привет", ApiKey: "secret-123"));
+LlmResponse allowed = guarded.Complete(new LlmRequest("gpt-6-sol", "привет", ApiKey: "secret-123"));
 Console.WriteLine("Пропущен дальше: " + allowed.Text + "\n");
 
 // ---------- 2. Caching proxy: кеш с TTL и статистикой ----------
@@ -29,18 +29,18 @@ Console.WriteLine("=== 2. Caching proxy ===");
 var cached = new CachingProxy(remote, ttl: TimeSpan.FromSeconds(1));
 
 var sw = Stopwatch.StartNew();
-cached.Complete(new LlmRequest("gpt-4o", "Что такое градиентный спуск?"));
+cached.Complete(new LlmRequest("gpt-6-sol", "Что такое градиентный спуск?"));
 Console.WriteLine("   1-й запрос: " + sw.ElapsedMilliseconds + " мс (сеть)");
 
 sw.Restart();
-cached.Complete(new LlmRequest("gpt-4o", "Что такое градиентный спуск?"));
+cached.Complete(new LlmRequest("gpt-6-sol", "Что такое градиентный спуск?"));
 Console.WriteLine("   2-й запрос: " + sw.ElapsedMilliseconds + " мс (кеш)");
 
-cached.Complete(new LlmRequest("gpt-4o", "Что такое backpropagation?"));
+cached.Complete(new LlmRequest("gpt-6-sol", "Что такое backpropagation?"));
 
 Thread.Sleep(1500); // TTL истёк — тот же вопрос снова уходит в сеть
 sw.Restart();
-cached.Complete(new LlmRequest("gpt-4o", "Что такое градиентный спуск?"));
+cached.Complete(new LlmRequest("gpt-6-sol", "Что такое градиентный спуск?"));
 Console.WriteLine("   после TTL:  " + sw.ElapsedMilliseconds + " мс (кеш протух)");
 
 cached.PrintStats();

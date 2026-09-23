@@ -10,7 +10,8 @@
 //   SaleValidator   проверка полей формы
 //   MainWindow      список и кнопки
 //   EditWindow      форма записи, в базу сама не пишет
-//   ReportsView     поиск и отчет за период
+//   ReportsView     поиск и отчет за период, кнопки PDF отдельно
+//   PdfReportExporter  сохранение поиска и отчета за период в PDF
 //   SaleTable       общая таблица для списка и отчетов
 
 using Avalonia;

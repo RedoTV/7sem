@@ -32,7 +32,7 @@ public static class Program
 
         while (true)
         {
-            string? sx = Read("Введите x (пустая строка - выход)");
+            string? sx = Read("Введите x");
             if (sx == null) return;
             if (ParseX(sx, out double x) is string ex) { Console.WriteLine("Ошибка: " + ex + "\n"); continue; }
 

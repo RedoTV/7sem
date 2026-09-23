@@ -3,16 +3,14 @@ using System.Collections.Generic;
 
 namespace Lab6;
 
-public sealed record ChatRequest(string Prompt);
-
 public sealed record ChatResponse(string Text, int Tokens, bool FromCache);
 
 public interface ILlmClient
 {
-    ChatResponse Complete(ChatRequest request);
+    ChatResponse Complete(string prompt);
 }
 
-public sealed class TransientLlmException : Exception 
+public sealed class TransientLlmException : Exception
 {
     public TransientLlmException(string message) : base(message) { }
 }
@@ -21,15 +19,15 @@ public sealed class FakeLlmClient : ILlmClient
 {
     private int _calls;
 
-    public ChatResponse Complete(ChatRequest request)
+    public ChatResponse Complete(string prompt)
     {
-        if (++_calls % 3 == 0) 
+        if (++_calls % 2 == 0)
         {
             throw new TransientLlmException("сетевой сбой шлюза");
         }
 
-        return new ChatResponse($"виртуальный ответ на \"{request.Prompt}\"",
-            Tokens: 10 + request.Prompt.Length / 3, FromCache: false);
+        return new ChatResponse($"виртуальный ответ на \"{prompt}\"",
+            Tokens: 10 + prompt.Length / 3, FromCache: false);
     }
 }
 
@@ -39,10 +37,10 @@ public sealed class LoggingDecorator : ILlmClient
 
     public LoggingDecorator(ILlmClient inner) => _inner = inner;
 
-    public ChatResponse Complete(ChatRequest request)
+    public ChatResponse Complete(string prompt)
     {
-        Console.WriteLine($"    [log] -> \"{request.Prompt}\"");
-        var response = _inner.Complete(request);
+        Console.WriteLine($"    [log] -> \"{prompt}\"");
+        var response = _inner.Complete(prompt);
         Console.WriteLine($"    [log] <- {response.Tokens} ток.");
         return response;
     }
@@ -59,13 +57,13 @@ public sealed class RetryDecorator : ILlmClient
         _maxAttempts = maxAttempts;
     }
 
-    public ChatResponse Complete(ChatRequest request)
+    public ChatResponse Complete(string prompt)
     {
         for (int attempt = 1; ; attempt++)
         {
             try
             {
-                return _inner.Complete(request);
+                return _inner.Complete(prompt);
             }
             catch (TransientLlmException ex) when (attempt < _maxAttempts)
             {
@@ -82,15 +80,15 @@ public sealed class CacheDecorator : ILlmClient
 
     public CacheDecorator(ILlmClient inner) => _inner = inner;
 
-    public ChatResponse Complete(ChatRequest request)
+    public ChatResponse Complete(string prompt)
     {
-        if (_cache.TryGetValue(request.Prompt, out var cached))
+        if (_cache.TryGetValue(prompt, out var cached))
         {
             return cached with { FromCache = true };
         }
 
-        var response = _inner.Complete(request);
-        _cache[request.Prompt] = response;
+        var response = _inner.Complete(prompt);
+        _cache[prompt] = response;
         return response;
     }
 }
@@ -116,7 +114,7 @@ public static class Program
 
     private static void Ask(ILlmClient client, string prompt)
     {
-        var response = client.Complete(new ChatRequest(prompt));
+        var response = client.Complete(prompt);
         var source = response.FromCache ? "из кэша" : "от модели";
         Console.WriteLine($"— \"{prompt}\" -> OK [{source}] {response.Text}\n");
     }
