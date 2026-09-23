@@ -14,14 +14,20 @@ public static class SaleRepository
         return Database.Query("SELECT * FROM Sales ORDER BY Id", MapSale);
     }
 
-    // Ищет по наименованию, артикулу или номеру чека.
+    // Поиск по наименованию, артикулу или номеру чека.
+    // Сравнение в C#: SQLite LIKE не приводит регистр кириллицы.
     public static List<Sale> Search(string text)
     {
-        return Database.Query("""
-            SELECT * FROM Sales
-            WHERE Product LIKE @q OR Article LIKE @q OR CAST(Receipt AS TEXT) LIKE @q
-            ORDER BY Id
-            """, MapSale, ("@q", "%" + text.Trim() + "%"));
+        string query = text.Trim();
+        List<Sale> sales = GetAll();
+
+        if (query.Length == 0)
+            return sales;
+
+        return sales.FindAll(sale =>
+            sale.Product.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            sale.Article.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+            sale.Receipt.ToString().Contains(query, StringComparison.Ordinal));
     }
 
     // Выбирает продажи за период [from; to], даты в формате yyyy-MM-dd.
@@ -29,6 +35,16 @@ public static class SaleRepository
     {
         return Database.Query("SELECT * FROM Sales WHERE SaleDate BETWEEN @from AND @to ORDER BY SaleDate",
             MapSale, ("@from", from), ("@to", to));
+    }
+
+    public static double Total(List<Sale> sales)
+    {
+        double total = 0;
+
+        foreach (Sale sale in sales)
+            total += sale.Price * sale.Quantity;
+
+        return total;
     }
 
     public static void Add(Sale sale)
@@ -67,14 +83,31 @@ public static class SaleRepository
         if (GetAll().Count > 0)
             return;
 
-        Add(new Sale { Shop = 1, Section = 2, Receipt = 100245, Product = "Монитор LG 24MK430H",      Article = "LG-24MK",  Price = 12500, Quantity = 3,  Date = "2025-01-14" });
-        Add(new Sale { Shop = 1, Section = 1, Receipt = 100246, Product = "Клавиатура Logitech K120",  Article = "LOG-K120", Price = 990,   Quantity = 10, Date = "2025-01-21" });
-        Add(new Sale { Shop = 2, Section = 3, Receipt = 200118, Product = "Наушники Sony WH-CH520",    Article = "SNY-CH520", Price = 4350, Quantity = 2,  Date = "2025-02-03" });
-        Add(new Sale { Shop = 2, Section = 1, Receipt = 200119, Product = "Мышь Logitech B100",        Article = "LOG-B100", Price = 650,   Quantity = 15, Date = "2025-02-07" });
-        Add(new Sale { Shop = 3, Section = 2, Receipt = 300512, Product = "SSD Kingston A400 480GB",   Article = "KIN-A400", Price = 3200,  Quantity = 4,  Date = "2025-02-19" });
-        Add(new Sale { Shop = 1, Section = 2, Receipt = 100247, Product = "Кабель HDMI 2.0, 1.5 м",    Article = "HDMI-15",  Price = 450,   Quantity = 20, Date = "2025-02-26" });
-        Add(new Sale { Shop = 3, Section = 1, Receipt = 300513, Product = "Веб-камера Defender G-eye", Article = "DEF-1000", Price = 1750,  Quantity = 5,  Date = "2025-03-05" });
-        Add(new Sale { Shop = 2, Section = 3, Receipt = 200120, Product = "Флешка SanDisk 64GB",       Article = "SDK-64",   Price = 890,   Quantity = 12, Date = "2025-03-12" });
+        // Две первые продажи старше 60 дней: отчет за период их не захватит.
+        Add(Sale("Монитор LG 24MK430H", "LG-24MK", 1, 2, 100245, 12500, 3, 80));
+        Add(Sale("Клавиатура Logitech K120", "LOG-K120", 1, 1, 100246, 990, 10, 70));
+        Add(Sale("Наушники Sony WH-CH520", "SNY-CH520", 2, 3, 200118, 4350, 2, 40));
+        Add(Sale("Мышь Logitech B100", "LOG-B100", 2, 1, 200119, 650, 15, 28));
+        Add(Sale("SSD Kingston A400 480GB", "KIN-A400", 3, 2, 300512, 3200, 4, 16));
+        Add(Sale("Кабель HDMI 2.0, 1.5 м", "HDMI-15", 1, 2, 100247, 450, 20, 9));
+        Add(Sale("Веб-камера Defender G-eye", "DEF-1000", 3, 1, 300513, 1750, 5, 4));
+        Add(Sale("Флешка SanDisk 64GB", "SDK-64", 2, 3, 200120, 890, 12, 1));
+    }
+
+    private static Sale Sale(string product, string article, int shop, int section,
+        int receipt, double price, int quantity, int daysAgo)
+    {
+        return new Sale
+        {
+            Shop = shop,
+            Section = section,
+            Receipt = receipt,
+            Product = product,
+            Article = article,
+            Price = price,
+            Quantity = quantity,
+            Date = DateTime.Today.AddDays(-daysAgo).ToString("yyyy-MM-dd")
+        };
     }
 
     // Читает текущую строку результата запроса в запись Sale.

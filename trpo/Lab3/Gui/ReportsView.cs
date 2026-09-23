@@ -14,7 +14,7 @@ public class ReportsView : UserControl
     {
         var layout = new Grid
         {
-            RowDefinitions = new RowDefinitions("Auto,*,Auto,*,Auto,Auto"),
+            RowDefinitions = new RowDefinitions("Auto,*,Auto,*"),
             Margin = new Thickness(8)
         };
 
@@ -56,12 +56,7 @@ public class ReportsView : UserControl
                 toDate.SelectedDate?.ToString("yyyy-MM-dd") ?? "");
 
             periodGrid.ItemsSource = sales;
-
-            double total = 0;
-            foreach (var sale in sales)
-                total += sale.Price * sale.Quantity;
-
-            periodInfo.Text = $"Продаж за период: {sales.Count}, сумма: {total:F2} руб.";
+            periodInfo.Text = $"Продаж за период: {sales.Count}, сумма: {SaleRepository.Total(sales):F2} руб.";
         };
 
         var periodRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -81,7 +76,6 @@ public class ReportsView : UserControl
         Grid.SetRow(searchGrid, 1);
         Grid.SetRow(periodRow, 2);
         Grid.SetRow(periodGrid, 3);
-        Grid.SetRow(periodInfo, 4);
 
         Content = layout;
     }

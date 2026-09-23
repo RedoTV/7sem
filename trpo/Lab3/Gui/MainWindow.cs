@@ -96,7 +96,21 @@ public class MainWindow : Window
 
     private async void OpenEditor(Sale? sale)
     {
-        await new EditWindow(sale).ShowDialog<Sale>(this);
+        Sale? edited = await new EditWindow(sale).ShowDialog<Sale?>(this);
+        if (edited == null)
+            return;
+
+        if (sale == null)
+        {
+            SaleRepository.Add(edited);
+            ShowInfo("Запись добавлена.");
+        }
+        else
+        {
+            SaleRepository.Update(edited);
+            ShowInfo($"Запись №{edited.Id} изменена.");
+        }
+
         RefreshRecords();
     }
 

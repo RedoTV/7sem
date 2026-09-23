@@ -26,19 +26,20 @@ public static class SaleTable
         AddColumn(grid, "Чек", nameof(Sale.Receipt), new DataGridLength(90));
         AddColumn(grid, "Наименование товара", nameof(Sale.Product), new DataGridLength(1, DataGridLengthUnitType.Star));
         AddColumn(grid, "Артикул", nameof(Sale.Article), new DataGridLength(110));
-        AddColumn(grid, "Цена", nameof(Sale.Price), new DataGridLength(90));
+        AddColumn(grid, "Цена", nameof(Sale.Price), new DataGridLength(90), "{0:0.00}");
         AddColumn(grid, "Кол-во", nameof(Sale.Quantity), new DataGridLength(70));
         AddColumn(grid, "Дата продажи", nameof(Sale.Date), new DataGridLength(110));
 
         return grid;
     }
 
-    private static void AddColumn(DataGrid grid, string header, string property, DataGridLength width)
+    private static void AddColumn(DataGrid grid, string header, string property, DataGridLength width,
+        string? format = null)
     {
         grid.Columns.Add(new DataGridTextColumn
         {
             Header = header,
-            Binding = new Binding(property),
+            Binding = new Binding(property) { StringFormat = format },
             Width = width
         });
     }

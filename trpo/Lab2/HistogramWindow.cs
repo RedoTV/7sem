@@ -1,5 +1,5 @@
-// Окно с гистограммой: диапазон значений делится на равные интервалы,
-// высота столбика пропорциональна количеству попаданий в интервал.
+// Окно гистограммы. Диапазон делится на равные интервалы,
+// высота столбика пропорциональна числу попаданий.
 
 using Avalonia;
 using Avalonia.Controls;
@@ -11,7 +11,6 @@ using Avalonia.Themes.Fluent;
 
 namespace Lab2;
 
-// Точка запуска графической части: показывает единственное окно.
 public class HistogramApp : Application
 {
     private readonly double[] _values;
@@ -25,7 +24,7 @@ public class HistogramApp : Application
 
     public override void Initialize()
     {
-        RequestedThemeVariant = ThemeVariant.Light; // светлый фон окна независимо от темы системы
+        RequestedThemeVariant = ThemeVariant.Light;
         Styles.Add(new FluentTheme());
     }
 
@@ -42,31 +41,45 @@ public class HistogramWindow : Window
 
     public HistogramWindow(double[] values, int intervalCount)
     {
-        Title = "Гистограмма";
+        Title = "Гистограмма разностей";
         Width = 840;
         Height = 470;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
         double min = values.Min();
-        double intervalWidth = (values.Max() - min) / intervalCount;
+        double max = values.Max();
+        double width = (max - min) / intervalCount;
+        int[] counts = CountIntervals(values, min, width, intervalCount);
 
-        // подсчет попаданий в каждый интервал
+        Content = BuildHistogram(counts, min, width);
+    }
+
+    // width == 0, когда все разности совпали: делить диапазон не на что
+    private static int[] CountIntervals(double[] values, double min, double width, int intervalCount)
+    {
         var counts = new int[intervalCount];
+
+        if (width == 0)
+        {
+            counts[0] = values.Length;
+            return counts;
+        }
 
         foreach (double x in values)
         {
-            int index = (int)((x - min) / intervalWidth);
+            int index = (int)((x - min) / width);
 
-            if (index == intervalCount) // значение, равное максимуму, относится к последнему интервалу
-                index--;
+            // из-за округления максимум иногда оказывается ровно на границе
+            if (index >= intervalCount)
+                index = intervalCount - 1;
 
             counts[index]++;
         }
 
-        Content = BuildHistogram(counts, min, intervalWidth);
+        return counts;
     }
 
-    private Grid BuildHistogram(int[] counts, double min, double intervalWidth)
+    private Grid BuildHistogram(int[] counts, double min, double width)
     {
         var grid = new Grid
         {
@@ -75,19 +88,20 @@ public class HistogramWindow : Window
         };
 
         int maxCount = counts.Max();
+        if (maxCount == 0)
+            maxCount = 1;
 
         for (int i = 0; i < counts.Length; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
 
             int barHeight = (int)Math.Round((double)counts[i] / maxCount * MaxBarHeight);
-
             var column = new StackPanel { VerticalAlignment = VerticalAlignment.Bottom };
 
             column.Children.Add(new TextBlock
             {
                 Text = counts[i].ToString(),
-                TextAlignment = TextAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 4)
             });
 
@@ -102,12 +116,10 @@ public class HistogramWindow : Window
             Grid.SetColumn(column, i);
             grid.Children.Add(column);
 
-            double from = min + i * intervalWidth;
-            double to = from + intervalWidth;
-
+            double from = min + i * width;
             var range = new TextBlock
             {
-                Text = $"[{from:F2}; {to:F2})",
+                Text = $"[{from:F2}; {from + width:F2})",
                 FontSize = 11,
                 TextAlignment = TextAlignment.Center
             };

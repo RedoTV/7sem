@@ -1,75 +1,137 @@
-// Lab9: Lazy — объект создаётся не сразу, а при первом обращении Get()
+// Lab9: Lazy — универсальный потокобезопасный контейнер MyLazy<T>.
+// Значение создаётся фабрикой ровно один раз — при первом обращении.
 
-LazyHolder holder = new LazyHolder();
-Console.WriteLine("Объект создан? " + holder.IsCreated); // false — ничего не создавали
+// ---------- 1. Базовый сценарий: дорогой объект ----------
+Console.WriteLine("=== 1. Базовый сценарий ===");
+var model = new MyLazy<NeuralModel>(() => new NeuralModel());
 
-Console.WriteLine(holder.GetValue()); // первый вызов -> создаём
-Console.WriteLine(holder.GetValue()); // второй -> тот же объект
+Console.WriteLine("Значение создано? " + model.IsValueCreated);
+Console.WriteLine("ToString(): " + model);
 
-Console.WriteLine("Объект создан? " + holder.IsCreated); // true
+NeuralModel first = model.Value;   // здесь происходит загрузка
+NeuralModel second = model.Value;  // тот же объект, загрузки больше нет
 
-// универсальный ленивый класс
-public class MyLazy<T> where T : class
+Console.WriteLine("Это один и тот же объект? " + ReferenceEquals(first, second));
+Console.WriteLine("Загрузок модели: " + NeuralModel.LoadCount);
+Console.WriteLine();
+
+// ---------- 2. Готовое значение можно передать сразу ----------
+Console.WriteLine("=== 2. Уже готовое значение ===");
+var ready = new MyLazy<string>("просто строка");
+Console.WriteLine("Создано сразу? " + ready.IsValueCreated + ", ToString(): " + ready);
+Console.WriteLine();
+
+// ---------- 3. Исключение в фабрике не кешируется ----------
+Console.WriteLine("=== 3. Ошибка фабрики ===");
+var flaky = new MyLazy<NeuralModel>(() => throw new Exception("файл весов повреждён"));
+
+try
 {
-    private Func<T> factory;
-    private T value;
-    private bool created;
+    flaky.Get();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Поймали: " + ex.Message);
+}
+Console.WriteLine("После ошибки создано? " + flaky.IsValueCreated + " (можно повторить попытку)");
+Console.WriteLine();
+
+// ---------- 4. Гонка потоков: 8 потоков зовут Get() одновременно ----------
+Console.WriteLine("=== 4. Потокобезопасность ===");
+var index = new MyLazy<EmbeddingIndex>(() => new EmbeddingIndex());
+
+Barrier start = new Barrier(8);
+List<Task> tasks = new List<Task>();
+for (int i = 0; i < 8; i++)
+{
+    tasks.Add(Task.Run(() =>
+    {
+        start.SignalAndWait(); // все потоки стартуют одновременно
+        index.Get();
+    }));
+}
+Task.WaitAll(tasks.ToArray());
+
+Console.WriteLine("Сборок индекса на 8 потоков: " + EmbeddingIndex.BuildCount); // ровно 1
+
+// ================== обобщённый ленивый контейнер ==================
+
+// Double-checked locking: быстрая дорога без блокировки,
+// под локом — повторная проверка, чтобы значение создалось ровно один раз.
+// Если фабрика бросает исключение — значение не кешируется, следующий Get() пробует снова.
+public class MyLazy<T>
+{
+    private readonly Func<T> _factory = default!;
+    private readonly object _sync = new object();
+    private T _value = default!;
+    private bool _created;
 
     public MyLazy(Func<T> factory)
     {
-        this.factory = factory;
+        _factory = factory ?? throw new ArgumentNullException(nameof(factory));
     }
 
-    public bool IsCreated
+    public MyLazy(T precreatedValue)
     {
-        get { return created; }
+        _value = precreatedValue;
+        _created = true;
+    }
+
+    public bool IsValueCreated
+    {
+        get { lock (_sync) return _created; }
+    }
+
+    // синоним Get(), как у System.Lazy<T>.Value
+    public T Value
+    {
+        get { return Get(); }
     }
 
     public T Get()
     {
-        if (!created)
+        if (Volatile.Read(ref _created))
+            return _value;
+
+        lock (_sync)
         {
-            Console.WriteLine("(первый вызов — создаём объект)");
-            value = factory();
-            created = true;
+            if (!_created)
+            {
+                _value = _factory();
+                _created = true;
+            }
+            return _value;
         }
-        return value;
+    }
+
+    public override string ToString()
+    {
+        return IsValueCreated ? Convert.ToString(_value) : "<значение ещё не создано>";
     }
 }
 
-// «дорогой» объект — имитация загрузки нейросети
+// ================== «дорогие» объекты для демо ==================
+
 public class NeuralModel
 {
+    public static int LoadCount;
+
     public NeuralModel()
     {
-        Console.WriteLine("Загружаем веса модели... (долго)");
-        Thread.Sleep(500);
-    }
-
-    public string Infer(string prompt)
-    {
-        return "Ответ модели на: " + prompt;
+        int n = Interlocked.Increment(ref LoadCount);
+        Console.WriteLine("  [модель] загрузка весов №" + n + "...");
+        Thread.Sleep(300);
+        Console.WriteLine("  [модель] готова");
     }
 }
 
-// хранит ленивую модель, ничего не создаёт до первого Get()
-public class LazyHolder
+public class EmbeddingIndex
 {
-    public MyLazy<NeuralModel> lazy = new MyLazy<NeuralModel>(CreateModel);
+    public static int BuildCount;
 
-    public bool IsCreated
+    public EmbeddingIndex()
     {
-        get { return lazy.IsCreated; }
-    }
-
-    public string GetValue()
-    {
-        NeuralModel model = lazy.Get();
-        return model.Infer("привет");
-    }
-
-    private static NeuralModel CreateModel()
-    {
-        return new NeuralModel();
+        Interlocked.Increment(ref BuildCount);
+        Thread.Sleep(200); // тяжёлое построение индекса
     }
 }

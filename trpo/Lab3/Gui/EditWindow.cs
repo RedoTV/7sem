@@ -1,12 +1,10 @@
-// Форма добавления и редактирования записи. При добавлении передается null,
-// при редактировании - изменяемая запись. Введенные данные проверяет
-// SaleValidator, при ошибке форма не закрывается и показывает сообщение.
+// Форма добавления и редактирования. В базу не пишет: проверяет поля
+// и возвращает запись, сохранить ее решает главное окно.
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Lab3.Data;
 using Lab3.Logic;
 using Lab3.Model;
 
@@ -122,16 +120,9 @@ public class EditWindow : Window
             return;
         }
 
-        if (_sale == null)
-        {
-            SaleRepository.Add(sale);
-        }
-        else
-        {
+        if (_sale != null)
             sale.Id = _sale.Id;
-            SaleRepository.Update(sale);
-        }
 
-        Close();
+        Close(sale);
     }
 }

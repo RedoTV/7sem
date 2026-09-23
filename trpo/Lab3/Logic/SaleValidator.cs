@@ -43,6 +43,10 @@ public static class SaleValidator
             return "Количество - целое положительное число";
         sale.Quantity = quantity;
 
+        if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out _))
+            return "Укажите дату продажи";
+
         return null;
     }
 }
